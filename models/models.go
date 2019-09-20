@@ -1,7 +1,7 @@
 package models
 
 import (
-    u "go-cars/utils"
+    u "github.com/GulnazBagautdinova/go-cars/utils"
 	"github.com/jinzhu/gorm"
 )
 
@@ -26,13 +26,11 @@ func (model *Model) Validate() (map[string] interface{}, bool) {
 	if ( i==0 ) {
 	return u.Message(false, "Status not correct"), false
 	}
-
-	//All the required parameters are present
+	//There are all  required parameters 
 	return u.Message(true, "success"), true
 }
 
 func (model *Model) Create() (map[string] interface{}) {
-
 
 	if resp, ok := model.Validate(); 
 	!ok {
@@ -41,33 +39,56 @@ func (model *Model) Create() (map[string] interface{}) {
 	GetDB().Create(model)
 	resp := u.Message(true, "success")
 	resp["model"] = model
+	if(model.Mileage > 0){
+		resp["is new"] = false
+	} else {
+		resp["is new"] = true 
+	}
 	return resp
 }
 
+func (model *Model) Update(id string) (map[string] interface{}) {
+	 
+	if resp, ok := model.Validate(); 
+	!ok {
+		return resp
+	}
+	res := GetDB().Table("models").Where("id = ?", id).Update(&model)
+	if res == nil {
+		resp := u.Message(false, "Model not found")
+		return resp
+	}
+	resp := u.Message(true, "success")
+	//resp["model"] = model
+	return resp
+}
 
 func (model *Model) Delete(id string) (map[string] interface{}) {
 	 
-	err := GetDB().Table("models").Where("id = ?", id).First(model).Error
-	if err != nil {
-		resp := u.Message(false, "Model not found")
+	res := GetDB().Table("models").Where("id = ?", id).First(&model)
+	if res == nil || model.ID == 0  {
+		resp := u.Message(false, "Model not found or was deleted")
 		return resp
 	}
-	
-	GetDB().Table("models").Where("Id= ?", id).Delete(model)
+	GetDB().Table("models").Where("id= ?", id).Delete(res)
 	resp := u.Message(true, "success")
 	return resp
 }
 
-func (model *Model) GetModels(id string) (map[string] interface{}) {
+func (model *Model) Get(id string) (map[string] interface{}) {
 	 
-	err := GetDB().Table("models").Where("id = ?", id).First(model).Error
-	if err != nil {
-		resp := u.Message(false, "Model not found")
+	res := GetDB().Table("models").Where("id = ?", id).First(&model)
+	if res == nil || model.ID == 0  {
+		resp := u.Message(false, "Model not found or was deleted")
 		return resp
 	}
-	
-	GetDB().Table("models").Where("Id= ?", id).First(&model)
 	resp := u.Message(true, "success")
 	resp["model"] = model
+	if(model.Mileage > 0){
+		resp["is new"] = false
+	} else {
+		resp["is new"] = true 
+	}
 	return resp
 }
+
